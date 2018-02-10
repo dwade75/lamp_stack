@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+    php:
+        build: ./
+        container_name: ${PROJECT_NAME}_php
+        stdin_open: true
+        tty: true
+        volumes:
+            - ${WORKSPACE}:/var/www/html
+#            - ${DOCKER_PROJECT_DIR}:/usr/local/etc/php
+        ports:
+            - 8080:80
+        links:
+            - mysql:mysql
+            - phpmyadmin:phpmyadmin
+            - redis:redis
+    #       - elasticsearch:elasticsearch
+
+    mysql:
+        image: mysql:5.7
+        container_name: ${PROJECT_NAME}_mysql
+        volumes:
+            - /var/lib/mysql
+            - ${DOCKER_PROJECT_DIR}/data/mysql:/var/www/html
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    redis:
+        image: redis
+        container_name: ${PROJECT_NAME}_redis
+        volumes:
+            - ${DOCKER_PROJECT_DIR}/data/redis
+
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.2.1
+        container_name: ${PROJECT_NAME}_elasticsearch
+        environment:
+            - cluster.name=neowebcar
+#            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        volumes:
+            - ${DOCKER_PROJECT_DIR}/data/elasticsearch:/usr/share/elasticsearch/data
+#            - ${DOCKER_PROJECT_DIR}/conf/elasticsearch:/usr/share/elasticsearch/config
+#            - ${DOCKER_PROJECT_DIR}/conf/elasticsearch/sysctl:/etc
+        ports:
+            - 9200:9200
+
+    logstash:
+        image: docker.elastic.co/logstash/logstash:6.2.1
+        container_name: ${PROJECT_NAME}_logstash
+        volumes:
+            - ${DOCKER_PROJECT_DIR}/conf/logstash/pipeline:/usr/share/logstash/pipeline
+        links:
+            - mysql:mysql
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: ${PROJECT_NAME}_phpmyadmin
+        ports:
+            - 9090:80
+        environment:
+            - PMA_HOST=mysql
+
+
+    portainer:
+        image: portainer/portainer
+        container_name: ${PROJECT_NAME}_portainer
+        privileged: true
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /opt/portainer:/data
+        ports:
+            - 9000:9000
