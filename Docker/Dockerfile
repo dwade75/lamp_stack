@@ -1,5 +1,5 @@
 FROM php:7.0-apache
-MAINTAINER Sajivan JOSEPH-PETRICK sjoseph-petrick@largus.fr
+MAINTAINER Sajivan JOSEPH-PETRICK josephpetrick.sajivan@gmail.com
 
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/bin/ --filename=composer
